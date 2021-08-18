@@ -1,0 +1,282 @@
+---
+title: "Using the tempun-package in R"
+author: "Victor Harbo Johnston"
+date: "8/15/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introduction
+In this r-markdown I have recreated the python code used in the article 
+_Inscriptions as data: digital epigraphy in macro-historical perspective_ in R. This is done by using the reticulate package. I have recreated figures 1-3 as a starting point. Another document on the reticulate package can be found in my github at: INSERT LINK 
+
+## Setup 
+```{r chunk 1, setup}
+library(tidyverse)
+library(reticulate)
+library(jsonlite)
+use_condaenv("RStudio") # Use this to use a conda environment
+```
+
+```{python}
+import geopandas as gpd
+import cite2c
+import requests
+import seaborn as sns
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+from scipy.stats import trapz
+import scipy
+import nltk
+import json
+import tempun
+import sddk
+import numpy as np
+import pandas as pd
+pd.options.display.max_columns = 1000  # to see all columns
+```
+
+## Loading data
+```{r chunk 3, loading data}
+list_json <- jsonlite::fromJSON("https://sciencedata.dk/public/b6b6afdb969d378b70929e86e58ad975/EDH_subset_2021-02-15.json")
+temp <- as_tibble(list_json)
+temp <- relocate(temp, not_before, .before = not_after) # relocates not_before column closer to not_after column to create a better overview.
+EDH <- relocate(temp, id, .before = responsible_individual) # relocates id to be the first column seen.
+
+# Changing dataformats
+EDH$not_before <- as.numeric(as.character(EDH$not_before))
+EDH$not_after <- as.numeric(as.character((EDH$not_after)))
+```
+
+## Working with r-objects in python
+When importing the r-object EDH into python I add r. before the name of the object. Then reticulate handles the rest.
+```{python}
+# How many inscriptions have both dates?
+EDH_dated = r.EDH[(r.EDH["not_before"].notnull()) | (r.EDH["not_after"].notnull())]
+len(EDH_dated)
+```
+
+```{python}
+# Generate a list of 1000 random dates for each inscription in the dataset
+EDH_dated["random_dates"] = EDH_dated.apply(lambda row: tempun.model_date(
+    row["not_before"], row["not_after"], size=1000,), axis=1)
+```
+
+Here I am saving the python object EDH_dated as an R-object called EDH_dated by using  py$ from the reticulate package. 
+```{r}
+# saving as r-object
+py$EDH_dated -> EDH_dated
+```
+
+```{python}
+# Count random dates in temporal timeblocks in a specified time range (from 200 BC to 600 AD, temporal blocks by 25 years)
+EDH_complete_simulations = tempun.timeblocks_from_randoms(
+    EDH_dated, "random_dates", [-200, 600, 25])
+```
+
+```{python}
+# Figure 1
+# plot all the dataset to see the epigraphic production in time
+
+plt.style.use("seaborn-white")
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['font.size'] = 10
+
+tab_colors_list = list(mcolors.TABLEAU_COLORS.keys())
+
+fig, ax = plt.subplots(figsize=(14, 6), tight_layout=True)
+
+tempun.plot_timeblocks_data(
+    EDH_complete_simulations, ax=ax, color="blue", label=f"EDH (n={len(EDH_dated)})")
+    
+ax.set_xlabel("Year", weight="bold")
+ax.set_ylabel("Count", weight="bold")
+ax.set_title("Total epigraphic production over time (EDH)")
+ax.legend(title="Data source", title_fontsize="large", bbox_to_anchor=(1, 1), loc='upper right')
+
+#plt.axvline(x=212, linewidth=0.5, color = 'orange', linestyle='dashed')
+
+#fig.suptitle(f'Comparison of epigraphic production over time', fontsize=16,fontweight="bold")
+plt.savefig('./output/Fig1_Epi_production_time.png')
+```
+
+```{python}
+# Inscriptions by their type over time, EDH
+
+simulations_by_type_len_EDH = []
+
+for ins_type in r.EDH["type_of_inscription_clean"].unique():
+    if ins_type != "NULL":
+        subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"] == ins_type]
+        simulations_by_type_len_EDH.append((ins_type, len(subset_df)))
+simulations_by_type_len_EDH = sorted(
+    simulations_by_type_len_EDH, key=lambda x: x[1], reverse=True)
+simulations_by_type_len_EDH
+
+simulations_by_type_EDH = []
+
+for ins_type_tup in simulations_by_type_len_EDH[:8]:
+    subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
+                          == ins_type_tup[0]]
+    simulations = tempun.timeblocks_from_randoms(
+        subset_df, "random_dates", [-200, 600, 25])
+    ins_type_N = len(subset_df)
+    simulations_by_type_EDH.append([ins_type_tup[0], ins_type_N, simulations])
+simulations_by_type_EDH = sorted(
+    simulations_by_type_EDH, key=lambda x: x[1], reverse=True)
+
+date_vars_by_instypes = []
+for ins_type_tup in simulations_by_type_len_EDH[:10]:
+    subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
+                          == ins_type_tup[0]]
+    date_vars = []
+    for n in range(100):
+        date_vars.append(
+            [date_var[n] for date_var in subset_df["random_dates"] if date_var != None])
+    date_vars_by_instypes.append(date_vars)
+```
+
+```{python}
+simulations_by_type_len_EDH
+```
+
+```{python}
+# Figure 2
+
+plt.style.use("seaborn-white")
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['font.size'] = 10
+
+fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(14, 12), tight_layout=True)
+
+for ins_type_sims, color in zip(simulations_by_type_EDH, tab_colors_list[:len(simulations_by_type_EDH)]):
+    tempun.plot_timeblocks_data(ins_type_sims[2], ax=ax1, color=color)
+
+ax1.set_xlabel("Year", weight="bold")
+ax1.set_ylabel("Count", weight="bold")
+#ax1.set_title(f"Eight most common inscription types over time (EDH, n={len(EDH_dated)})", weight="bold")
+
+markers = [plt.Line2D([0, 0], [0, 0], color=color, lw=4)
+           for color in tab_colors_list[:len(simulations_by_type_EDH)]]
+
+legend_labels_EDH = [tup[0] + " (n={})".format(str(tup[1])) for tup in simulations_by_type_EDH]
+
+ax1.legend(markers, legend_labels_EDH, numpoints=1,  
+           title=f"Inscription types (EDH n={len(EDH_dated)})", title_fontsize="large", bbox_to_anchor=(1, 1), loc='upper right')
+
+plt.savefig('./output/Fig2_Typologies_comparison_time.png')
+```
+
+```{python}
+# periods definitions
+
+periods = {  # to avoid overlaps, startdates are postponed by one year, when needed
+    "Late Roman Republic": {"startdate": -200, "enddate": -26, "duration": 175},
+    "Julio-Claudian dyn.": {"startdate": -27, "enddate": 68, "duration": 95},
+    "Flavian dyn.": {"startdate": 69, "enddate": 96,"duration": 28},
+    "Nerva-Antonine dyn.": {"startdate": 97, "enddate": 192, "duration": 96},
+    "Severan dyn.": {"startdate": 193, "enddate": 235, "duration": 43},
+    "Military emperors": {"startdate": 236, "enddate": 284,"duration": 49},
+    "Tetrarchy-Constantine I": {"startdate": 285, "enddate": 337,"duration": 53},
+    "Late Roman Empire": {"startdate": 338, "enddate": 600,"duration": 263}
+}
+timeblocks_periods = [(periods[period]["startdate"],
+                       periods[period]["enddate"],
+                       periods[period]["duration"]) for period in periods]
+timeblocks_periods
+```
+
+```{python}
+def date_to_str(date):
+    if date < 0:
+        date = str(abs(date)) + " BC"
+    else:
+        date = "AD " + str(date)
+    return date
+
+
+periods_labels = []
+for period in periods.keys():
+    start = date_to_str(periods[period]["startdate"])
+    end = date_to_str(periods[period]["enddate"])
+    periods_labels.append(period + "\n({0}-{1})".format(start, end))
+periods_labels
+```
+
+```{python}
+# loading shapefile from Pleaides for the largest extent of the Roman Empire, AD 117
+# source: https://raw.githubusercontent.com/pelagios/magis-pleiades-regions/main/pleiades-regions-magis-pelagios.geojson
+pleiades_regions = gpd.read_file('./pleiades_regions.geojson', driver='GeoJSON')
+RE_merged = pleiades_regions.unary_union
+```
+
+```{python}
+def get_date_var(randoms):
+    try:
+        return randoms[0]
+    except:
+        return None
+
+# selecting one random date out of the 1000 version
+EDH_dated["date_var_1"] = EDH_dated["random_dates"].apply(get_date_var)
+```
+
+```{python}
+# modifying coordinates in EDH to fit the script
+EDH_dated[['Longitude', 'Latitude']] = pd.DataFrame(EDH_dated.coordinates. tolist(), index=EDH_dated.index)
+```
+
+```{python}
+EDH_dated_df_by_periods = []
+
+for period in timeblocks_periods:
+    EDH_dated_sample = EDH_dated[EDH_dated["date_var_1"].between(
+        period[0], period[1])]
+    # tranforming EDH as geodataframe
+    EDH_dated_sample = EDH_dated_sample[EDH_dated_sample["Latitude"].notnull()]
+    EDH_dated_sample = gpd.GeoDataFrame(EDH_dated_sample, geometry=gpd.points_from_xy(EDH_dated_sample["Longitude"], EDH_dated_sample["Latitude"]))
+    # selecting only those dated and within borders of the Empire (the largest extent in AD 117)
+    EDH_dated_sample = EDH_dated_sample[EDH_dated_sample.within(RE_merged)]
+    EDH_dated_df_by_periods.append(EDH_dated_sample)
+```
+
+```{python}
+# Figure 3
+# plot all EDH and EDCSx inscriptions with location in 8 plots grouped by period
+plt.style.use("seaborn-white")
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['font.size'] = 10
+
+
+fig, axs  = plt.subplots(4, 2, figsize=(7, 7), tight_layout=True)
+
+contexts_pct = {}
+    
+for df_edh, ax, period in zip(EDH_dated_df_by_periods, axs.ravel(), periods_labels):
+    pleiades_regions.plot(ax=ax, color="lightgray")
+    df_edh.plot(markersize=0.04, color="darkblue", ax=ax, alpha=0.2, label=len(df_edh))
+    ax.set_title(period, fontsize=6)
+    ax.set_axis_off()
+    markers = [plt.Line2D([0,0],[0,0],color=color, marker=".", linestyle="") for color in ["darkblue", "red"]]
+    legend_labels = ["EDH (n={0})".format(str(len(df_edh)))]
+    
+    ax.legend(markers, legend_labels, numpoints=1, bbox_to_anchor=(0.6, 1), loc='upper left', fontsize=5)
+   
+plt.tight_layout(pad=0)
+plt.subplots_adjust(wspace=0.0, hspace=0.0)
+
+#fig.suptitle(f'Spatial extent of the epigraphic production by historic period', fontsize=8, fontweight="bold")
+plt.savefig('./output/Fig3_Epi_production_periods_EDCSx_EDH.png')
+```
+
+
+
+
+
+
+
+
+
+
