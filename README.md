@@ -46,7 +46,7 @@ Anything else on data metadata and data used. Link to data repository or explana
 [Describe first steps, how to use the current repository by a typical user - the digital historian with limited technical skills]
 1. First, you follow the guide in how_to_reticulate.rmd. Here you will learn how to navigate python inside R Studio
 1. Second, you try to follow along in the document Using_the_tempun_package_in_R.rmd and see how python code can run inside R
-1. Third, you celebrate that you now are able to write code in python and R inside R Studio
+1. Third, you celebrate that you now are able to write and run code in python and R inside R Studio
 
 
 
