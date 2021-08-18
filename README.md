@@ -3,7 +3,7 @@
 ---
 
 ## Purpose
-[The purpose of this repository is to provide a tool, that makes it easier to apply python code when working in R.]
+The purpose of this repository is to provide a tool, that makes it easier to apply python code when working in R.
 
 ---
 ## Authors
@@ -22,10 +22,11 @@ CC-BY-SA 4.0, see attached License.md
 # How to use this repository
 
 ## Sources and prerequisites
-[Describe the provenance of data used in the scripts contained and clarify how it is harvested and what other prerequisites are required to get the scripts working. In case of pure tool attribute any reused scripts to source, etc., license and specify any prerequisites or technical requirements.]
+The data used in this project is from the EDH (Epigraphic Database Heidelberg) database.
+To make these scripts run you will have to know where python is installed on your machine as the rmd file requires you to specify where python is installed on your system. If you are using virtuelenv or conda it is enough to know the name of your environment, when setting up.
 
 ### Data
-Anything else on data metadata and data used. Link to data repository or explanatory article. 
+[Anything else on data metadata and data used. Link to data repository or explanatory article.]
 
 ### Software
 1. R, minimum version 4.0.3
@@ -39,11 +40,10 @@ Anything else on data metadata and data used. Link to data repository or explana
 
 ---
 ## Installation
-[Installation and setup are further described in the R-markdown file how_to_reticulate.rmd. To run the software you need to have python, R and R studio installed on your machine.]
+Installation and setup are further described in the R-markdown file how_to_reticulate.rmd. To run the software you need to have python, R and R studio installed on your machine.
 
 ---
 ## Instructions 
-[Describe first steps, how to use the current repository by a typical user - the digital historian with limited technical skills]
 1. First, you follow the guide in how_to_reticulate.rmd. Here you will learn how to navigate python inside R Studio
 1. Second, you try to follow along in the document Using_the_tempun_package_in_R.rmd and see how python code can run inside R
 1. Third, you celebrate that you now are able to write and run code in python and R inside R Studio
