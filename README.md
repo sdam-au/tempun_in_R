@@ -40,7 +40,11 @@ To make these scripts run you will have to know where python is installed on you
 
 ---
 ## Installation
-Installation and setup are further described in the R-markdown file how_to_reticulate.rmd. To run the software you need to have python, R and R studio installed on your machine. The python modules used in this script has to be installed with either pip or conda before working with tempun in R. This means that you have to run python on your command line before the script can be used in RStudio. One way to install the python dependencies is to use the requirements. txt file from this repository.
+Installation and setup are further described in the R-markdown file how_to_reticulate.rmd. To run the software you need to have python, R and R studio installed on your machine. The python modules used in this script has to be installed with either pip or conda before working with tempun in R. This means that you have to run python on your command line before the script can be used in RStudio. One way to install the python dependencies is to use the requirements. txt file from this repository. This file can be used to install all the python dependencies at once. This is done with:
+    
+    pip install -r requirements.txt
+    
+
 
 ---
 ## Instructions 
