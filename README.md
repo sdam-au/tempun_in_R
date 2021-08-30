@@ -3,7 +3,7 @@
 ---
 
 ## Purpose
-The purpose of this repository is to provide a tool, that makes it easier to apply python code when working in R.
+The purpose of this repository is to provide a tool, that makes it easier to apply python code when working in R. Specifically this repository makes a broad introduction to the R package 'reticulate' and it introduces more deeply to using the python module tempun inside RStudio.
 
 ---
 ## Authors
@@ -20,6 +20,9 @@ CC-BY-SA 4.0, see attached License.md
 
 ---
 # How to use this repository
+I would suggest that you start your exploration of this repository in the file how_to_reticulate.rmd. When you have an understanding of the reticulate package you should move on to use the python tempun module in the Using_the_tempun_package_in_R.rmd. 
+
+In short, this repository can be used to run python code inside RStudio. 
 
 ## Sources and prerequisites
 The data used in this project is from the EDH (Epigraphic Database Heidelberg) database.
