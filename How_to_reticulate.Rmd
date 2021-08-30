@@ -21,12 +21,19 @@ library(reticulate) #Loads reticulate
 
 Depending on your python installation, you have to specify where and how python is installed on your system. The reticulate package looks for python on your PATH, but sometimes it can be located somewhere else. If you are using virtuelenv or conda you can also set reticulate to work in a specific environment in any of these places. Just uncomment the one you need to use and add the path or name to that environment.
 
-I am using a conda-environtment in this example. That's why the conda command below is not commentet out.
+I am using a conda-environtment in this example. That's why the conda command below is not commented out.
 ```{r chunk 2, setup}
 # use_python("/usr/local/bin/python") # Use this to use a specific version of python on your system.
 # use_virtualenv("myenv") # Use this to use virtualenv environment.
-use_condaenv("RStudio") # Use this to use a conda environment
+# use_condaenv("RStudio") # Use this to use a conda environment
 ```
+
+How to check configuration info for Python
+```{r}
+py_config()
+py_discover_config()
+```
+
 
 ## Calling python from R
 

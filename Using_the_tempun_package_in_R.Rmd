@@ -13,26 +13,42 @@ In this r-markdown I have recreated the python code used in the article
 _Inscriptions as data: digital epigraphy in macro-historical perspective_ in R. This is done by using the reticulate package. I have recreated figures 1-3 as a starting point. Another document on the reticulate package can be found in my github at: INSERT LINK 
 
 ## Setup 
-```{r chunk 1, setup}
+```{r chunk 1, setup in R}
+
+#install.packages(c("tidyverse", "reticulate", "jsonlite"))
+
+# load R libraries
 library(tidyverse)
 library(reticulate)
 library(jsonlite)
-use_condaenv("RStudio") # Use this to use a conda environment
+
+
+# install Python
+
+#use_condaenv("RStudio") # Use this to use a conda environment if you have one
+use_python("/usr/local/bin/python") # use this if you have local python installed
+
+# load Python packages - via terminal window, TBA
+
 ```
 
 ```{python}
-import geopandas as gpd
-import cite2c
+# pip install seems not working
+#pip install seaborn
+
+#py_install("seaborn")
+
+import geopandas as gpd # https://vincent.doba.fr/posts/20210407_install-fiona-on-windows/ & https://geopandas.org/getting_started/install.html Issues with geopandas on windows
 import requests
 import seaborn as sns
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 from scipy.stats import trapz
 import scipy
-import nltk
+#import nltk
 import json
 import tempun
-import sddk
+#import sddk
 import numpy as np
 import pandas as pd
 pd.options.display.max_columns = 1000  # to see all columns
@@ -45,7 +61,7 @@ temp <- as_tibble(list_json)
 temp <- relocate(temp, not_before, .before = not_after) # relocates not_before column closer to not_after column to create a better overview.
 EDH <- relocate(temp, id, .before = responsible_individual) # relocates id to be the first column seen.
 
-# Changing dataformats
+# Changing data formats
 EDH$not_before <- as.numeric(as.character(EDH$not_before))
 EDH$not_after <- as.numeric(as.character((EDH$not_after)))
 ```
@@ -100,6 +116,8 @@ ax.legend(title="Data source", title_fontsize="large", bbox_to_anchor=(1, 1), lo
 
 #fig.suptitle(f'Comparison of epigraphic production over time', fontsize=16,fontweight="bold")
 plt.savefig('./output/Fig1_Epi_production_time.png')
+
+fig
 ```
 
 ```{python}
@@ -167,6 +185,7 @@ ax1.legend(markers, legend_labels_EDH, numpoints=1,
            title=f"Inscription types (EDH n={len(EDH_dated)})", title_fontsize="large", bbox_to_anchor=(1, 1), loc='upper right')
 
 plt.savefig('./output/Fig2_Typologies_comparison_time.png')
+fig
 ```
 
 ```{python}
