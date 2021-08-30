@@ -17,33 +17,27 @@ Before we can get into the fun here in RStudio we have to make sure that we have
     
     pip install -r requirements.txt
     
+When this has been done you are ready to return to the RStudio session. The only time you would need to acces python through the CLI again is if you want to make use of some other python modules inside RStudio.
 
 ## Setup 
+Here we are installing and loading the R packages that are needed in this file. Furthermore we are selecting our version of python. If you just installed python you should probably use the use_python() line and not the conda or virtualenv lines. Those are for using specific conda or virtual environments.
 ```{r chunk 1, setup in R}
+### Install R packages
+#install.packages(c("tidyverse", "reticulate", "jsonlite")) #Installs packages needed in r
 
-#install.packages(c("tidyverse", "reticulate", "jsonlite"))
-
-# load R libraries
+### load R libraries
 library(tidyverse)
 library(reticulate)
 library(jsonlite)
 
-
-# install Python
-
+### Choose python version
+#use_virtualenv()
 #use_condaenv("RStudio") # Use this to use a conda environment if you have one
 use_python("/usr/local/bin/python") # use this if you have local python installed
-
-# load Python packages - via terminal window, TBA
-
 ```
 
+In this chunk of code we are working in python, this is chosen in line 40 in the parenthisis. This chunk of code loads the python modules into our session.
 ```{python}
-# pip install seems not working
-#pip install seaborn
-
-#py_install("seaborn")
-
 import geopandas as gpd # https://vincent.doba.fr/posts/20210407_install-fiona-on-windows/ & https://geopandas.org/getting_started/install.html Issues with geopandas on windows. The requirements.txt file might be able to install the packages, if not you should look into these geopandas links.
 import requests
 import seaborn as sns
