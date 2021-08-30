@@ -10,8 +10,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 ## Introduction
 In this r-markdown I have recreated the python code used in the article 
-_Inscriptions as data: digital epigraphy in macro-historical perspective_ in R. This is done by using the reticulate package. I have recreated figures 1-3 as a starting point. Another document on the reticulate package can be found in my github at: INSERT LINK 
+_Inscriptions as data: digital epigraphy in macro-historical perspective_ in R. This is done by using the reticulate package. I have recreated figures 1-3 as a starting point. Another document on the reticulate package can be found in my github at: https://github.com/sdam-au/tempun_in_R/blob/master/How_to_reticulate.Rmd 
 
+## Setup outside of RStudio
+Before we can get into the fun here in RStudio we have to make sure that we have done the python setup. In your command line interface you have to at first have python installed. When python is installed you need to install python modules from the requirements.txt file. This can be done on the command line by running this in your working directory:
+    
+    pip install -r requirements.txt
+    
 ## Setup 
 ```{r chunk 1, setup in R}
 
