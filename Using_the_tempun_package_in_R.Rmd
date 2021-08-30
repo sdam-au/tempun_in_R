@@ -17,6 +17,7 @@ Before we can get into the fun here in RStudio we have to make sure that we have
     
     pip install -r requirements.txt
     
+
 ## Setup 
 ```{r chunk 1, setup in R}
 
@@ -43,7 +44,7 @@ use_python("/usr/local/bin/python") # use this if you have local python installe
 
 #py_install("seaborn")
 
-import geopandas as gpd # https://vincent.doba.fr/posts/20210407_install-fiona-on-windows/ & https://geopandas.org/getting_started/install.html Issues with geopandas on windows
+import geopandas as gpd # https://vincent.doba.fr/posts/20210407_install-fiona-on-windows/ & https://geopandas.org/getting_started/install.html Issues with geopandas on windows. The requirements.txt file might be able to install the packages, if not you should look into these geopandas links.
 import requests
 import seaborn as sns
 import matplotlib.colors as mcolors
