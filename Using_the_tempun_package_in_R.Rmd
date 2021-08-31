@@ -58,6 +58,8 @@ pd.options.display.max_columns = 1000  # to see all columns
 ```{r chunk 3, loading data}
 list_json <- jsonlite::fromJSON("https://sciencedata.dk/public/b6b6afdb969d378b70929e86e58ad975/EDH_subset_2021-02-15.json")
 temp <- as_tibble(list_json)
+
+# Restructures some columns to create a better overview
 temp <- relocate(temp, not_before, .before = not_after) # relocates not_before column closer to not_after column to create a better overview.
 EDH <- relocate(temp, id, .before = responsible_individual) # relocates id to be the first column seen.
 
