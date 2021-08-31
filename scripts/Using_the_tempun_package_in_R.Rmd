@@ -21,7 +21,7 @@ When this has been done you are ready to return to the RStudio session. The only
 
 ## Setup 
 Here we are installing and loading the R packages that are needed in this file. Furthermore we are selecting our version of python. If you just installed python you should probably use the use_python() line and not the conda or virtualenv lines. Those are for using specific conda or virtual environments.
-```{r chunk 1, setup in R}
+```{r chunk 1, setup in R, include=FALSE}
 ### Install R packages
 #install.packages(c("tidyverse", "reticulate", "jsonlite")) #Installs packages needed in r
 
@@ -122,7 +122,7 @@ ax.legend(title="Data source", title_fontsize="large", bbox_to_anchor=(1, 1), lo
 #plt.axvline(x=212, linewidth=0.5, color = 'orange', linestyle='dashed')
 
 #fig.suptitle(f'Comparison of epigraphic production over time', fontsize=16,fontweight="bold")
-plt.savefig('./output/Fig1_Epi_production_time.png')
+plt.savefig('../output/Fig1_Epi_production_time.png')
 
 fig
 ```
@@ -191,7 +191,7 @@ legend_labels_EDH = [tup[0] + " (n={})".format(str(tup[1])) for tup in simulatio
 ax1.legend(markers, legend_labels_EDH, numpoints=1,  
            title=f"Inscription types (EDH n={len(EDH_dated)})", title_fontsize="large", bbox_to_anchor=(1, 1), loc='upper right')
 
-plt.savefig('./output/Fig2_Typologies_comparison_time.png')
+plt.savefig('../output/Fig2_Typologies_comparison_time.png')
 fig
 ```
 
@@ -236,7 +236,7 @@ In the following chunk we are loading a shapefile, that represents the Roman Emp
 ```{python}
 # loading shapefile from Pleaides for the largest extent of the Roman Empire, AD 117
 # source: https://raw.githubusercontent.com/pelagios/magis-pleiades-regions/main/pleiades-regions-magis-pelagios.geojson
-pleiades_regions = gpd.read_file('./pleiades_regions.geojson', driver='GeoJSON')
+pleiades_regions = gpd.read_file('../data/pleiades_regions.geojson', driver='GeoJSON')
 RE_merged = pleiades_regions.unary_union
 ```
 
@@ -296,7 +296,7 @@ plt.tight_layout(pad=0)
 plt.subplots_adjust(wspace=0.0, hspace=0.0)
 
 #fig.suptitle(f'Spatial extent of the epigraphic production by historic period', fontsize=8, fontweight="bold")
-plt.savefig('./output/Fig3_Epi_production_periods_EDCSx_EDH.png')
+plt.savefig('../output/Fig3_Epi_production_periods_EDCSx_EDH.png')
 fig
 ```
 
