@@ -32,8 +32,8 @@ library(jsonlite)
 
 ### Choose python version
 #use_virtualenv()
-#use_condaenv("RStudio") # Use this to use a conda environment if you have one
-use_python("/usr/local/bin/python") # use this if you have local python installed
+use_condaenv("pip") # Use this to use a conda environment if you have one
+#use_python("/usr/local/bin/python") # use this if you have local python installed
 ```
 
 In this chunk of code we are working in python, this is chosen in line 40 in the parenthisis. This chunk of code loads the python modules into our session.
