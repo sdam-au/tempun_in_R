@@ -295,7 +295,7 @@ for df_edh, ax, period in zip(EDH_dated_df_by_periods, axs.ravel(), periods_labe
 plt.tight_layout(pad=0)
 plt.subplots_adjust(wspace=0.0, hspace=0.0)
 
-#fig.suptitle(f'Spatial extent of the epigraphic production by historic period', fontsize=8, fontweight="bold")
+fig.suptitle(f'Spatial extent of the epigraphic production by historic period', fontsize=8, fontweight="bold")
 plt.savefig('../output/Fig3_Epi_production_periods_EDCSx_EDH.png')
 fig
 ```
