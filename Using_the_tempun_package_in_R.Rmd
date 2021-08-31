@@ -55,10 +55,14 @@ pd.options.display.max_columns = 1000  # to see all columns
 ```
 
 ## Loading data
+Now it is time to load our data into R. In the following chunk we are loading data into the object temp
 ```{r chunk 3, loading data}
 list_json <- jsonlite::fromJSON("https://sciencedata.dk/public/b6b6afdb969d378b70929e86e58ad975/EDH_subset_2021-02-15.json")
 temp <- as_tibble(list_json)
+```
 
+To make everything look cleaner we are moving the column not_before forward in the dataset. Visually it should be before the not_after column. In the second part of the following chunk we are ensuring that the not_before and not_after column are numerics. This is done to make the tempun module work properly later on. 
+```{r}
 # Restructures some columns to create a better overview
 temp <- relocate(temp, not_before, .before = not_after) # relocates not_before column closer to not_after column to create a better overview.
 EDH <- relocate(temp, id, .before = responsible_individual) # relocates id to be the first column seen.
@@ -69,7 +73,7 @@ EDH$not_after <- as.numeric(as.character((EDH$not_after)))
 ```
 
 ## Working with r-objects in python
-When importing the r-object EDH into python I add r. before the name of the object. Then reticulate handles the rest.
+When importing the r-object EDH into python I add r. before the name of the object. Then reticulate handles the rest. This means that you can call any of you python objects inside python code by adding r. before the name of the object. In this chunk we are creating a python object called EDH_dated from our R object EDH.
 ```{python}
 # How many inscriptions have both dates?
 EDH_dated = r.EDH[(r.EDH["not_before"].notnull()) | (r.EDH["not_after"].notnull())]
@@ -82,7 +86,7 @@ EDH_dated["random_dates"] = EDH_dated.apply(lambda row: tempun.model_date(
     row["not_before"], row["not_after"], size=1000,), axis=1)
 ```
 
-Here I am saving the python object EDH_dated as an R-object called EDH_dated by using  py$ from the reticulate package. 
+Here I am saving the python object EDH_dated as an R-object called EDH_dated by using  py$ from the reticulate package. Again, this can be done with any python object and makes it possible to work across the languages. 
 ```{r}
 # saving as r-object
 py$EDH_dated -> EDH_dated
@@ -94,6 +98,7 @@ EDH_complete_simulations = tempun.timeblocks_from_randoms(
     EDH_dated, "random_dates", [-200, 600, 25])
 ```
 
+The following figures makes more sence if you are adding more than one dataset to them. This document is just a sample on how it can be done in RStudio, so it only uses one dataset, but it still creates an overview of how the output graphs could look.
 ```{python}
 # Figure 1
 # plot all the dataset to see the epigraphic production in time
@@ -190,6 +195,7 @@ plt.savefig('./output/Fig2_Typologies_comparison_time.png')
 fig
 ```
 
+Here we are adding some definitions of the periods
 ```{python}
 # periods definitions
 
@@ -226,6 +232,7 @@ for period in periods.keys():
 periods_labels
 ```
 
+In the following chunk we are loading a shapefile, that represents the Roman Empire at its largest extend in AD 117. This is used in the third figure. 
 ```{python}
 # loading shapefile from Pleaides for the largest extent of the Roman Empire, AD 117
 # source: https://raw.githubusercontent.com/pelagios/magis-pleiades-regions/main/pleiades-regions-magis-pelagios.geojson
@@ -290,6 +297,7 @@ plt.subplots_adjust(wspace=0.0, hspace=0.0)
 
 #fig.suptitle(f'Spatial extent of the epigraphic production by historic period', fontsize=8, fontweight="bold")
 plt.savefig('./output/Fig3_Epi_production_periods_EDCSx_EDH.png')
+fig
 ```
 
 
