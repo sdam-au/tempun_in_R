@@ -3,7 +3,7 @@
 ---
 
 ## Purpose
-The purpose of this repository is to provide a tool, that makes it easier to apply python code when working in R. Specifically this repository makes a broad introduction to the R package 'reticulate' and it introduces more deeply to using the python module tempun inside RStudio.
+The purpose of this repository is to provide a tool, that makes it easier to apply python code when working in R. Specifically this repository makes a broad introduction to the R package 'reticulate' and it introduces more deeply how to use the python module tempun in RStudio.
 
 ---
 ## Authors
