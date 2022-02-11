@@ -22,8 +22,13 @@ library(reticulate) #Loads reticulate
 Depending on your python installation, you have to specify where and how python is installed on your system. The reticulate package looks for python on your PATH, but sometimes it can be located somewhere else. If you are using virtuelenv or conda you can also set reticulate to work in a specific environment in any of these places. Just uncomment the one you need to use and add the path or name to that environment.
 
 I am using a conda-environtment in this example. That's why the conda command below is not commented out.
+
+This is problematic when using the "use_python"-function, as python is not necessarily stored in "/usr/local/bin/python".
+Instead you can use the "which python" command in your terminal to locate the default python version on your computer, then copy this into the use python function.
+
 ```{r chunk 2, setup}
-# use_python("/usr/local/bin/python") # Use this to use a specific version of python on your system.
+#use_python(system("which python", intern = TRUE)) # Use this to use a specific version of python on your system.
+#use_python("/usr/local/bin/python") # Use this to use a specific version of python on your system.
 # use_virtualenv("myenv") # Use this to use virtualenv environment.
 # use_condaenv("RStudio") # Use this to use a conda environment
 ```
@@ -46,8 +51,9 @@ print("It even works!")
 Another way to call python is to use the function py_run_string():
 
 ```{r}
-py_run_string(print("This is weird. I'm inside an R code chunk, but still I'm speaking python!"))
+py_run_string('print("This is weird. I´m inside an R code chunk, but still I´m speaking python!")')
 ```
+The py_run_string()-function takes a string, and runs it as a python-command.
 
 ## Working with r-objects in python and python-objects in R
 Where this reticulate package gets really handy is when we are working across the languages. R-objects can be called in python by writing r. in front of the name. Likewise can python-objects be called py writing py$ in front of the name. Lets demonstrate. I will create an r-object, then load it in python.
