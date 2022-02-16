@@ -23,11 +23,21 @@ Depending on your python installation, you have to specify where and how python 
 
 I am using a conda-environtment in this example. That's why the conda command below is not commented out.
 
-This is problematic when using the "use_python"-function, as python is not necessarily stored in "/usr/local/bin/python".
-Instead you can use the "which python" command in your terminal to locate the default python version on your computer, then copy this into the use python function.
+This is problematic when using the "use_python"-function, as python is not necessarily stored in "/usr/local/bin/python". Instead you can use the "which python" command in your terminal to locate the default python version on your computer, then copy this into the use python function.
+
+If you are runnning this script locally on a macbook, you might have trouble using the "use_python" command to access python3. This is because macbook's come with python 2.7.18 preinstalled. But no need to worry, we will simply need to tell your R-enviroment to run reticulate using python3.
+Start by running the "python --version" command in your terminal check if python3 is indeed the default on your computer. If it isn't you will need to change your default version of python.
+Now you will need to run the "which python" command in your terminal, to locate where python is storred on your computer. You shoul now run; 
+              touch $HOME/.Renviron
+              
+              followed by
+              
+              open $HOME/.Renvion
+In your terminal. This should open a text window, that might be empty. Add the line "	RETICULATE_PYTHON=  'path to python on your computer'" to the window, and close it.
+When running the reticulate package, your computer should now use python3 by default.
 
 ```{r chunk 2, setup}
-#use_python("/usr/local/bin/python") # Use this to use a specific version of python on your system.
+use_python("/usr/local/bin/python") # Use this to use a specific version of python on your system.
 # use_virtualenv("myenv") # Use this to use virtualenv environment.
 # use_condaenv("RStudio") # Use this to use a conda environment
 #use_python(system("which python", intern = TRUE))#Using the system-commmand to locate python on your computer. "intern = TRUE" tells the system-command to save the output as a string.
