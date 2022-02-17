@@ -32,9 +32,10 @@ library(jsonlite)
 
 ### Choose python version
 #use_virtualenv()
-use_condaenv("pip") # Use this to use a conda environment if you have one
-#use_python("/usr/local/bin/python") # use this if you have local python installed
+#use_condaenv("pip") # Use this to use a conda environment if you have one
+use_python(system("which python", intern = TRUE)) # use this if you have local python installed
 ```
+
 
 In this chunk of code we are working in python, this is chosen in line 40 in the parenthisis. This chunk of code loads the python modules into our session.
 ```{python}
@@ -61,6 +62,7 @@ list_json <- jsonlite::fromJSON("https://sciencedata.dk/public/b6b6afdb969d378b7
 temp <- as_tibble(list_json)
 ```
 
+
 To make everything look cleaner we are moving the column not_before forward in the dataset. Visually it should be before the not_after column. In the second part of the following chunk we are ensuring that the not_before and not_after column are numerics. This is done to make the tempun module work properly later on. 
 ```{r}
 # Restructures some columns to create a better overview
@@ -80,6 +82,11 @@ EDH_dated = r.EDH[(r.EDH["not_before"].notnull()) | (r.EDH["not_after"].notnull(
 len(EDH_dated)
 ```
 
+We are now left with the inscriptions that have both "not before" year, and a "not after" year. The problem is that we would like to model the number of inscriptions over time, which is not possible as is. 
+
+We will now assume that the real year an inscription was made follows a trapezoidal distribution, with limits "not_before" and "not_after", relevant to the given inscription. This assumption will allow us to simulate a number of dates for each inscription. We will then sample from these simulated dates. It is this sample we will use to build our model.
+
+The following chunk of code simulates 1000 dates from the trepezoidal distribution for each insciption, and stores them in a list named "random_dates". 
 ```{python}
 # Generate a list of 1000 random dates for each inscription in the dataset
 EDH_dated["random_dates"] = EDH_dated.apply(lambda row: tempun.model_date(
@@ -92,11 +99,16 @@ Here I am saving the python object EDH_dated as an R-object called EDH_dated by 
 py$EDH_dated -> EDH_dated
 ```
 
+We have now simulated 1000 dates for each inscribtion. The following code now takes a random sample of one date for each incription. With each date assigned a specific date, the function counts the number of inscriptions in each temporal block, in this case every 25 years from 200 bc to 600 AD. By default the function will perform this task 100 times. The output is a list of these 100 random sampels devided into temporal blocks.
 ```{python}
 # Count random dates in temporal timeblocks in a specified time range (from 200 BC to 600 AD, temporal blocks by 25 years)
 EDH_complete_simulations = tempun.timeblocks_from_randoms(
-    EDH_dated, "random_dates", [-200, 600, 25])
+    EDH_dated, "random_dates", [-200, 600, 25], random_size=100)
 ```
+
+We now have 100 random samples of the number of inscriptions in a given 25-year timeblock, which allows us to create a model. We will create the emperical 90th percentile confidence interval of the number of inscriptions.
+
+In the following we will plot the 90'th percent confidence interval of the number of inscriptions in a given 25 year bloc, this will be the blue part of the graph. The grey part of the graph will show the minimal and maximal number of inscriptions, in a given time-block, from our sampling of the simulation. 
 
 The following figures makes more sence if you are adding more than one dataset to them. This document is just a sample on how it can be done in RStudio, so it only uses one dataset, but it still creates an overview of how the output graphs could look.
 ```{python}
