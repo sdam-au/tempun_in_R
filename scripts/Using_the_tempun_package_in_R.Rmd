@@ -99,7 +99,7 @@ Here I am saving the python object EDH_dated as an R-object called EDH_dated by 
 py$EDH_dated -> EDH_dated
 ```
 
-We have now simulated 1000 dates for each inscribtion. The following code now takes a random sample of one date for each incription. With each date assigned a specific date, the function counts the number of inscriptions in each temporal block, in this case every 25 years from 200 bc to 600 AD. By default the function will perform this task 100 times. The output is a list of these 100 random sampels devided into temporal blocks.
+We have now simulated 1000 dates for each inscription. The following code now takes a random sample of one date for each incription. With each date assigned a specific date, the function counts the number of inscriptions in each temporal block, in this case every 25 years from 200 bc to 600 AD. By default the function will perform this task 100 times. The output is a list of these 100 random sampels devided into temporal blocks.
 ```{python}
 # Count random dates in temporal timeblocks in a specified time range (from 200 BC to 600 AD, temporal blocks by 25 years)
 EDH_complete_simulations = tempun.timeblocks_from_randoms(
@@ -139,10 +139,13 @@ plt.savefig('../output/Fig1_Epi_production_time.png')
 fig
 ```
 
+
 ```{python}
 # Inscriptions by their type over time, EDH
 
 simulations_by_type_len_EDH = []
+
+#We will start by counting the number of insciptions of each type, then storring the data in simulations_by_type_len_EDH
 
 for ins_type in r.EDH["type_of_inscription_clean"].unique():
     if ins_type != "NULL":
@@ -152,9 +155,11 @@ simulations_by_type_len_EDH = sorted(
     simulations_by_type_len_EDH, key=lambda x: x[1], reverse=True)
 simulations_by_type_len_EDH
 
+#We will now look at the types of inscriptions with more than 50 observation. We will look at the subset of EDH derived by only looking at inscriptions of a specific type, then sample like we did in line 105-106. This is so we can create the graph like we did in line 114-139, but this time for each type of inscription. 
+
 simulations_by_type_EDH = []
 
-for ins_type_tup in simulations_by_type_len_EDH[:8]:
+for ins_type_tup in simulations_by_type_len_EDH[:8]: #We need more than 50 observations
     subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
                           == ins_type_tup[0]]
     simulations = tempun.timeblocks_from_randoms(
@@ -164,19 +169,15 @@ for ins_type_tup in simulations_by_type_len_EDH[:8]:
 simulations_by_type_EDH = sorted(
     simulations_by_type_EDH, key=lambda x: x[1], reverse=True)
 
-date_vars_by_instypes = []
-for ins_type_tup in simulations_by_type_len_EDH[:10]:
-    subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
-                          == ins_type_tup[0]]
-    date_vars = []
-    for n in range(100):
-        date_vars.append(
-            [date_var[n] for date_var in subset_df["random_dates"] if date_var != None])
-    date_vars_by_instypes.append(date_vars)
-```
-
-```{python}
-simulations_by_type_len_EDH
+#date_vars_by_instypes = []
+#for ins_type_tup in simulations_by_type_len_EDH[:10]:
+    #subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
+                          #== ins_type_tup[0]]
+    #date_vars = []
+    #for n in range(100):
+        #date_vars.append(
+            #[date_var[n] for date_var in subset_df["random_dates"] if date_var != None])
+    #date_vars_by_instypes.append(date_vars)
 ```
 
 ```{python}
@@ -207,13 +208,16 @@ plt.savefig('../output/Fig2_Typologies_comparison_time.png')
 fig
 ```
 
+Now that we have been able to model the different types of inscriptions relative to time, we would like to see if we can say something about the different roman timeperiods.
+In the following we will try to see if we can model where the different inscriptions were found, relative to the roman timeperiod i could be from. 
+
 Here we are adding some definitions of the periods
 ```{python}
 # periods definitions
 
 periods = {  # to avoid overlaps, startdates are postponed by one year, when needed
     "Late Roman Republic": {"startdate": -200, "enddate": -26, "duration": 175},
-    "Julio-Claudian dyn.": {"startdate": -27, "enddate": 68, "duration": 95},
+    "Julio-Claudian dyn.": {"startdate": -25, "enddate": 68, "duration": 95},
     "Flavian dyn.": {"startdate": 69, "enddate": 96,"duration": 28},
     "Nerva-Antonine dyn.": {"startdate": 97, "enddate": 192, "duration": 96},
     "Severan dyn.": {"startdate": 193, "enddate": 235, "duration": 43},
@@ -227,6 +231,7 @@ timeblocks_periods = [(periods[period]["startdate"],
 timeblocks_periods
 ```
 
+The following chunk of code makes the numerical dates into written dates, ie. -100 becomes 100 bc.It then uses this to create the Period_labels-list. 
 ```{python}
 def date_to_str(date):
     if date < 0:
@@ -263,11 +268,13 @@ def get_date_var(randoms):
 EDH_dated["date_var_1"] = EDH_dated["random_dates"].apply(get_date_var)
 ```
 
+
 ```{python}
 # modifying coordinates in EDH to fit the script
 EDH_dated[['Longitude', 'Latitude']] = pd.DataFrame(EDH_dated.coordinates. tolist(), index=EDH_dated.index)
 ```
 
+The following chunk formats the the geographical data related to each incription, such that it can be plottet. 
 ```{python}
 EDH_dated_df_by_periods = []
 
@@ -311,13 +318,3 @@ fig.suptitle(f'Spatial extent of the epigraphic production by historic period', 
 plt.savefig('../output/Fig3_Epi_production_periods_EDCSx_EDH.png')
 fig
 ```
-
-
-
-
-
-
-
-
-
-
