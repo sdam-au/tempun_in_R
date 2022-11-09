@@ -1,0 +1,340 @@
+---
+title: "Using the tempun-package in R with Python venv"
+author: "Adela"
+date: "9 Nov 2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Introduction
+In this r-markdown I have recreated the python code used in the article 
+_Inscriptions as data: digital epigraphy in macro-historical perspective_ in R. This is done by using the reticulate package. I have recreated figures 1-3 as a starting point. Another document on the reticulate package can be found in my github at: https://github.com/sdam-au/tempun_in_R/blob/master/How_to_reticulate.Rmd 
+
+## Setup outside of RStudio
+Before we can get into the fun here in RStudio we have to make sure that we have done the python setup. In your command line interface you have to at first have python installed. When python is installed you need to install python modules from the requirements.txt file. This can be done on the command line by running this in your working directory:
+    
+    pip install -r requirements.txt
+    
+When this has been done you are ready to return to the RStudio session. The only time you would need to acces python through the CLI again is if you want to make use of some other python modules inside RStudio.
+
+## Setup 
+Here we are installing and loading the R packages that are needed in this file. Furthermore we are selecting our version of python. If you just installed python you should probably use the use_python() line and not the conda or virtualenv lines. Those are for using specific conda or virtual environments.
+```{r chunk 1, setup in R, include=FALSE}
+### Install R packages
+#install.packages(c("tidyverse", "reticulate", "jsonlite")) #Installs packages needed in r
+
+### load R libraries
+library(tidyverse)
+library(reticulate)
+library(jsonlite)
+
+### Choose python version
+#use_virtualenv() # LOOK AT THE SETUP BELOW!
+#use_condaenv("pip") # Use this to use a conda environment if you have one
+#use_python("C:/Users/adela/AppData/Local/Programs/Python/Python39/") # use this if you have local python installed
+```
+Create Python virtual env in R and use that
+```{r}
+# Set up virtual environment for python packages
+virtualenv_create(envname = "venv", python = NULL ,packages = c("geopandas", "requests","seaborn","matplotlib", "scipy", "tempun", "numpy", "pandas"))
+
+# Activate the environment
+use_virtualenv("venv")
+
+# Check that it exists
+virtualenv_list()
+
+# If messy, delete venv and restart
+#virtualenv_remove("venv")
+
+# If needing, you can install additional packages into the venv (BUT JSON IS NOT NEEDED)
+# virtualenv_install(envname = "venv", packages = c("json"), ignore_installed = TRUE)
+
+#virtualenv_python()
+Sys.which("python")
+#reticulate::py_config()
+```
+
+In this chunk of code we are working in python, this is chosen in line 40 in the parenthesis. This chunk of code loads the python modules into our session.
+```{python}
+import geopandas as gpd # https://vincent.doba.fr/posts/20210407_install-fiona-on-windows/ & https://geopandas.org/getting_started/install.html Issues with geopandas on windows. The requirements.txt file might be able to install the packages, if not you should look into these geopandas links.
+import requests
+import seaborn as sns
+import matplotlib.colors as mcolors
+import matplotlib.pyplot as plt
+from scipy.stats import trapz
+import scipy
+#import nltk
+import json
+import tempun
+#import sddk
+import numpy as np
+import pandas as pd
+pd.options.display.max_columns = 1000  # to see all columns
+```
+
+## Loading data
+Now it is time to load our data into R. In the following chunk we are loading data into the object temp
+```{r chunk 3, loading data}
+list_json <- jsonlite::fromJSON("https://sciencedata.dk/public/b6b6afdb969d378b70929e86e58ad975/EDH_subset_2021-02-15.json")
+temp <- as_tibble(list_json)
+```
+
+To make everything look cleaner we are moving the column not_before forward in the dataset. Visually it should be before the not_after column. In the second part of the following chunk we are ensuring that the not_before and not_after column are numerics. This is done to make the tempun module work properly later on. 
+```{r}
+# Restructures some columns to create a better overview
+temp <- relocate(temp, not_before, .before = not_after) # relocates not_before column closer to not_after column to create a better overview.
+EDH <- relocate(temp, id, .before = responsible_individual) # relocates id to be the first column seen.
+
+# Changing data formats
+EDH$not_before <- as.numeric(as.character(EDH$not_before))
+EDH$not_after <- as.numeric(as.character((EDH$not_after)))
+```
+
+## Working with r-objects in python
+When importing the r-object EDH into python I add r. before the name of the object. Then reticulate handles the rest. This means that you can call any of you python objects inside python code by adding r. before the name of the object. In this chunk we are creating a python object called EDH_dated from our R object EDH.
+```{python}
+# How many inscriptions have both dates?
+EDH_dated = r.EDH[(r.EDH["not_before"].notnull()) | (r.EDH["not_after"].notnull())]
+len(EDH_dated)
+```
+
+```{python}
+# Generate a list of 1000 random dates for each inscription in the dataset
+EDH_dated["random_dates"] = EDH_dated.apply(lambda row: tempun.model_date(
+    row["not_before"], row["not_after"], size=1000,), axis=1)
+```
+
+Here I am saving the python object EDH_dated as an R-object called EDH_dated by using  py$ from the reticulate package. Again, this can be done with any python object and makes it possible to work across the languages. 
+```{r}
+# saving as r-object
+py$EDH_dated -> EDH_dated
+names(EDH_dated)
+tail(EDH_dated$random_dates)
+```
+
+```{python}
+# Count random dates in temporal timeblocks in a specified time range (from 200 BC to 600 AD, temporal blocks by 25 years)
+EDH_complete_simulations = tempun.timeblocks_from_randoms(
+    EDH_dated["random_dates"], [-200, 600, 25])
+```
+
+```{python}
+EDH_dated["random_dates"]
+```
+
+
+The following figures makes more sense if you are adding more than one dataset to them. This document is just a sample on how it can be done in RStudio, so it only uses one dataset, but it still creates an overview of how the output graphs could look.
+```{python}
+# Figure 1
+# plot all the dataset to see the epigraphic production in time
+
+plt.style.use("seaborn-white")
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['font.size'] = 10
+
+tab_colors_list = list(mcolors.TABLEAU_COLORS.keys())
+
+fig, ax = plt.subplots(figsize=(14, 6), tight_layout=True)
+
+tempun.plot_timeblocks_data(
+    EDH_complete_simulations, ax=ax, color="blue", label=f"EDH (n={len(EDH_dated)})")
+    
+ax.set_xlabel("Year", weight="bold")
+ax.set_ylabel("Count", weight="bold")
+ax.set_title("Total epigraphic production over time (EDH)")
+ax.legend(title="Data source", title_fontsize="large", bbox_to_anchor=(1, 1), loc='upper right')
+
+#plt.axvline(x=212, linewidth=0.5, color = 'orange', linestyle='dashed')
+
+#fig.suptitle(f'Comparison of epigraphic production over time', fontsize=16,fontweight="bold")
+plt.savefig('../output/Fig1_Epi_production_time.png')
+
+fig
+```
+Adela : I do not get why the next chunk uses the 'simulation' language. Does it derive the values from the simulations above? I don't see the simulations happening here and they don't seem necessary for the table summary
+```{python}
+# Inscriptions by their type over time, EDH
+
+simulations_by_type_len_EDH = []
+
+for ins_type in r.EDH["type_of_inscription_clean"].unique():
+    if ins_type != "NULL":
+        subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"] == ins_type]
+        simulations_by_type_len_EDH.append((ins_type, len(subset_df)))
+simulations_by_type_len_EDH = sorted(
+    simulations_by_type_len_EDH, key=lambda x: x[1], reverse=True)
+simulations_by_type_len_EDH
+
+simulations_by_type_EDH = []
+
+for ins_type_tup in simulations_by_type_len_EDH[:8]:
+    subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
+                          == ins_type_tup[0]]
+    simulations = tempun.timeblocks_from_randoms(
+        subset_df["random_dates"], [-200, 600, 25])
+    ins_type_N = len(subset_df)
+    simulations_by_type_EDH.append([ins_type_tup[0], ins_type_N, simulations])
+simulations_by_type_EDH = sorted(simulations_by_type_EDH, key=lambda x: x[1], reverse=True)
+
+date_vars_by_instypes = []
+for ins_type_tup in simulations_by_type_len_EDH[:10]:
+    subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
+                          == ins_type_tup[0]]
+    date_vars = []
+    for n in range(100):
+        date_vars.append(
+            [date_var[n] for date_var in subset_df["random_dates"] if date_var != None])
+    date_vars_by_instypes.append(date_vars)
+```
+
+```{python}
+simulations_by_type_len_EDH
+```
+
+```{python}
+# Figure 2
+
+plt.style.use("seaborn-white")
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['font.size'] = 10
+
+fig, ax = plt.subplots(figsize=(14, 6), tight_layout=True)
+
+#fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(14, 12), tight_layout=True)
+
+for ins_type_sims, color in zip(simulations_by_type_EDH, tab_colors_list[:len(simulations_by_type_EDH)]):
+    tempun.plot_timeblocks_data(ins_type_sims[2], ax=ax, color=color)
+
+ax.set_xlabel("Year", weight="bold")
+ax.set_ylabel("Count", weight="bold")
+#ax1.set_title(f"Eight most common inscription types over time (EDH, n={len(EDH_dated)})", weight="bold")
+
+markers = [plt.Line2D([0, 0], [0, 0], color=color, lw=4)
+           for color in tab_colors_list[:len(simulations_by_type_EDH)]]
+
+legend_labels_EDH = [tup[0] + " (n={})".format(str(tup[1])) for tup in simulations_by_type_EDH]
+
+ax.legend(markers, legend_labels_EDH, numpoints=1,  
+           title=f"Inscription types (EDH n={len(EDH_dated)})", title_fontsize="large", bbox_to_anchor=(1, 1), loc='upper right')
+
+plt.savefig('../output/Fig2_Typologies_comparison_time.png')
+fig
+```
+
+Here we are adding some definitions of the periods
+```{python}
+# periods definitions
+
+periods = {  # to avoid overlaps, startdates are postponed by one year, when needed
+    "Late Roman Republic": {"startdate": -200, "enddate": -26, "duration": 175},
+    "Julio-Claudian dyn.": {"startdate": -27, "enddate": 68, "duration": 95},
+    "Flavian dyn.": {"startdate": 69, "enddate": 96,"duration": 28},
+    "Nerva-Antonine dyn.": {"startdate": 97, "enddate": 192, "duration": 96},
+    "Severan dyn.": {"startdate": 193, "enddate": 235, "duration": 43},
+    "Military emperors": {"startdate": 236, "enddate": 284,"duration": 49},
+    "Tetrarchy-Constantine I": {"startdate": 285, "enddate": 337,"duration": 53},
+    "Late Roman Empire": {"startdate": 338, "enddate": 600,"duration": 263}
+}
+timeblocks_periods = [(periods[period]["startdate"],
+                       periods[period]["enddate"],
+                       periods[period]["duration"]) for period in periods]
+timeblocks_periods
+```
+
+```{python}
+def date_to_str(date):
+    if date < 0:
+        date = str(abs(date)) + " BC"
+    else:
+        date = "AD " + str(date)
+    return date
+
+
+periods_labels = []
+for period in periods.keys():
+    start = date_to_str(periods[period]["startdate"])
+    end = date_to_str(periods[period]["enddate"])
+    periods_labels.append(period + "\n({0}-{1})".format(start, end))
+periods_labels
+```
+
+In the following chunk we are loading a shapefile, that represents the Roman Empire at its largest extent in AD 117. This is used in the third figure. 
+```{python}
+# loading shapefile from Pleaides for the largest extent of the Roman Empire, AD 117
+# source: https://raw.githubusercontent.com/pelagios/magis-pleiades-regions/main/pleiades-regions-magis-pelagios.geojson
+pleiades_regions = gpd.read_file('../data/pleiades_regions.geojson', driver='GeoJSON')
+RE_merged = pleiades_regions.unary_union
+```
+
+```{python}
+def get_date_var(randoms):
+    try:
+        return randoms[0]
+    except:
+        return None
+
+# selecting one random date out of the 1000 version
+EDH_dated["date_var_1"] = EDH_dated["random_dates"].apply(get_date_var)
+```
+
+```{python}
+# modifying coordinates in EDH to fit the script
+EDH_dated[['Longitude', 'Latitude']] = pd.DataFrame(EDH_dated.coordinates. tolist(), index=EDH_dated.index)
+```
+
+```{python}
+EDH_dated_df_by_periods = []
+
+for period in timeblocks_periods:
+    EDH_dated_sample = EDH_dated[EDH_dated["date_var_1"].between(
+        period[0], period[1])]
+    # tranforming EDH as geodataframe
+    EDH_dated_sample = EDH_dated_sample[EDH_dated_sample["Latitude"].notnull()]
+    EDH_dated_sample = gpd.GeoDataFrame(EDH_dated_sample, geometry=gpd.points_from_xy(EDH_dated_sample["Longitude"], EDH_dated_sample["Latitude"]))
+    # selecting only those dated and within borders of the Empire (the largest extent in AD 117)
+    EDH_dated_sample = EDH_dated_sample[EDH_dated_sample.within(RE_merged)]
+    EDH_dated_df_by_periods.append(EDH_dated_sample)
+```
+
+```{python}
+# Figure 3
+# plot all EDH and EDCSx inscriptions with location in 8 plots grouped by period
+plt.style.use("seaborn-white")
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['font.size'] = 10
+
+
+fig, axs  = plt.subplots(4, 2, figsize=(7, 7), tight_layout=True)
+
+contexts_pct = {}
+    
+for df_edh, ax, period in zip(EDH_dated_df_by_periods, axs.ravel(), periods_labels):
+    pleiades_regions.plot(ax=ax, color="lightgray")
+    df_edh.plot(markersize=0.04, color="darkblue", ax=ax, alpha=0.2, label=len(df_edh))
+    ax.set_title(period, fontsize=6)
+    ax.set_axis_off()
+    markers = [plt.Line2D([0,0],[0,0],color=color, marker=".", linestyle="") for color in ["darkblue", "red"]]
+    legend_labels = ["EDH (n={0})".format(str(len(df_edh)))]
+    
+    ax.legend(markers, legend_labels, numpoints=1, bbox_to_anchor=(0.6, 1), loc='upper left', fontsize=5)
+   
+plt.tight_layout(pad=0)
+plt.subplots_adjust(wspace=0.0, hspace=0.0)
+
+fig.suptitle(f'Spatial extent of the epigraphic production by historic period', fontsize=8, fontweight="bold")
+plt.savefig('../output/Fig3_Epi_production_periods_EDCSx_EDH.png')
+fig
+```
+
+
+
+
+
+
+
+
+
+
