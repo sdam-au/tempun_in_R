@@ -32,11 +32,17 @@ library(jsonlite)
 
 ### Choose python version
 #use_virtualenv()
-use_condaenv("pip") # Use this to use a conda environment if you have one
-#use_python("/usr/local/bin/python") # use this if you have local python installed
+#use_condaenv("pip") # Use this to use a conda environment if you have one
+use_python("/usr/local/bin/python") # use this if you have local python installed
 ```
 
-In this chunk of code we are working in python, this is chosen in line 40 in the parenthisis. This chunk of code loads the python modules into our session.
+```{r}
+# checking which python to use
+Sys.which("python")
+```
+
+
+In this chunk of code we are working in python, this is chosen in line 40 in the parenthesis. This chunk of code loads the python modules into our session.
 ```{python}
 import geopandas as gpd # https://vincent.doba.fr/posts/20210407_install-fiona-on-windows/ & https://geopandas.org/getting_started/install.html Issues with geopandas on windows. The requirements.txt file might be able to install the packages, if not you should look into these geopandas links.
 import requests
@@ -95,10 +101,10 @@ py$EDH_dated -> EDH_dated
 ```{python}
 # Count random dates in temporal timeblocks in a specified time range (from 200 BC to 600 AD, temporal blocks by 25 years)
 EDH_complete_simulations = tempun.timeblocks_from_randoms(
-    EDH_dated, "random_dates", [-200, 600, 25])
+    EDH_dated["random_dates"], [-200, 600, 25])
 ```
 
-The following figures makes more sence if you are adding more than one dataset to them. This document is just a sample on how it can be done in RStudio, so it only uses one dataset, but it still creates an overview of how the output graphs could look.
+The following figures makes more sense if you are adding more than one dataset to them. This document is just a sample on how it can be done in RStudio, so it only uses one dataset, but it still creates an overview of how the output graphs could look.
 ```{python}
 # Figure 1
 # plot all the dataset to see the epigraphic production in time
@@ -146,7 +152,7 @@ for ins_type_tup in simulations_by_type_len_EDH[:8]:
     subset_df = EDH_dated[EDH_dated["type_of_inscription_clean"]
                           == ins_type_tup[0]]
     simulations = tempun.timeblocks_from_randoms(
-        subset_df, "random_dates", [-200, 600, 25])
+        subset_df["random_dates"], [-200, 600, 25])
     ins_type_N = len(subset_df)
     simulations_by_type_EDH.append([ins_type_tup[0], ins_type_N, simulations])
 simulations_by_type_EDH = sorted(
@@ -174,21 +180,22 @@ plt.style.use("seaborn-white")
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.size'] = 10
 
-fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(14, 12), tight_layout=True)
+fig, ax = plt.subplots(figsize=(14, 6), tight_layout=True)
+#fig, [ax1, ax2] = plt.subplots(2, 1, figsize=(14, 12), tight_layout=True)
 
 for ins_type_sims, color in zip(simulations_by_type_EDH, tab_colors_list[:len(simulations_by_type_EDH)]):
-    tempun.plot_timeblocks_data(ins_type_sims[2], ax=ax1, color=color)
+    tempun.plot_timeblocks_data(ins_type_sims[2], ax=ax, color=color)
 
-ax1.set_xlabel("Year", weight="bold")
-ax1.set_ylabel("Count", weight="bold")
-#ax1.set_title(f"Eight most common inscription types over time (EDH, n={len(EDH_dated)})", weight="bold")
+ax.set_xlabel("Year", weight="bold")
+ax.set_ylabel("Count", weight="bold")
+#ax.set_title(f"Eight most common inscription types over time (EDH, n={len(EDH_dated)})", weight="bold")
 
 markers = [plt.Line2D([0, 0], [0, 0], color=color, lw=4)
            for color in tab_colors_list[:len(simulations_by_type_EDH)]]
 
 legend_labels_EDH = [tup[0] + " (n={})".format(str(tup[1])) for tup in simulations_by_type_EDH]
 
-ax1.legend(markers, legend_labels_EDH, numpoints=1,  
+ax.legend(markers, legend_labels_EDH, numpoints=1,  
            title=f"Inscription types (EDH n={len(EDH_dated)})", title_fontsize="large", bbox_to_anchor=(1, 1), loc='upper right')
 
 plt.savefig('../output/Fig2_Typologies_comparison_time.png')
