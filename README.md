@@ -1,4 +1,4 @@
-# tempun in R
+# How to use *tempun* Python package within R
 
 ---
 
@@ -11,9 +11,6 @@ The purpose of this repository is to provide a tool, that makes it easier to app
 
 ## License
 CC-BY-SA 4.0, see attached License.md
-
-## DOI
-[Here will be DOI or some other identifier once we have it]
 
 ### References
 [tempun, https://github.com/sdam-au/tempun]
@@ -28,21 +25,19 @@ In short, this repository can be used to run python code inside RStudio.
 The data used in this project is from the EDH (Epigraphic Database Heidelberg) database.
 To make these scripts run you will have to know where python is installed on your machine as the rmd file requires you to specify where python is installed on your system. If you are using virtuelenv or conda it is enough to know the name of your environment, when setting up.
 
-### Data
-[Anything else on data metadata and data used. Link to data repository or explanatory article.]
-
 ### Software
 1. R, minimum version 4.0.3
 2. R Studio, minimum version 1.3.1093
 3. Python, minimum version 3.9.6
 
 ### Hardware
-1. Multiple-screen
+1. Computer with multiple-screens
 1. Mouse
 1. Coffee
 
 ---
 ## Installation
+
 Installation and setup are further described in the R-markdown file how_to_reticulate.rmd. To run the software you need to have python, R and R studio installed on your machine. The python modules used in this script has to be installed with either pip or conda before working with tempun in R. This means that you have to run python on your command line before the script can be used in RStudio. One way to install the python dependencies is to use the requirements.txt file from this repository. This file can be used to install all the python dependencies at once. This is done with:
     
     pip install -r requirements.txt
